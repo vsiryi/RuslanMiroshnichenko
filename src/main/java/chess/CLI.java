@@ -3,6 +3,9 @@ package chess;
 import chess.pieces.Piece;
 
 import java.io.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * This class provides the basic CLI interface to the Chess game.
@@ -23,6 +26,7 @@ public class CLI {
 
     /**
      * Write the string to the output
+     *
      * @param str The string to write
      */
     private void writeOutput(String str) {
@@ -31,6 +35,7 @@ public class CLI {
 
     /**
      * Retrieve a string from the console, returning after the user hits the 'Return' key.
+     *
      * @return The input from the user, or an empty-length string if they did not type anything.
      */
     private String getInput() {
@@ -64,9 +69,9 @@ public class CLI {
                 } else if (input.equals("board")) {
                     writeOutput("Current Game:");
                 } else if (input.equals("list")) {
-                    writeOutput("====> List Is Not Implemented (yet) <====");
+                    showPossibleMoves();
                 } else if (input.startsWith("move")) {
-                    writeOutput("====> Move Is Not Implemented (yet) <====");
+                    movePieceOperation(input);
                 } else {
                     writeOutput("I didn't understand that.  Type 'help' for a list of commands.");
                 }
@@ -77,6 +82,92 @@ public class CLI {
     private void doNewGame() {
         gameState = new GameState();
         gameState.reset();
+    }
+
+    /**
+     * Show list of possible moves
+     */
+    private void showPossibleMoves() {
+        writeOutput(gameState.getCurrentPlayer() + "'s Possible moves:");
+
+        StringBuilder possibleMoves = new StringBuilder();
+
+        Map<Position, List<Position>> possibleMoveMap = getPossibleMoves();
+
+        for (Map.Entry<Position, List<Position>> pieceItem : possibleMoveMap.entrySet()) {
+
+            Position fromPosition = pieceItem.getKey();
+            List<Position> toPositionList = pieceItem.getValue();
+
+            for (Position toPositionItem : toPositionList) {
+                possibleMoves.append(fromPosition).append("->").append(toPositionItem).append("\n");
+            }
+        }
+
+        writeOutput(possibleMoves.toString());
+
+    }
+
+    private Map<Position, List<Position>> getPossibleMoves() {
+        HashMap<Position, List<Position>> possibleMoveMap = new HashMap<>();
+
+        Map<Position, Piece> pieceMap = gameState.getPieceMap(gameState.getCurrentPlayer());
+
+        for (Map.Entry<Position, Piece> pieceItem : pieceMap.entrySet()) {
+
+            Position position = pieceItem.getKey();
+            Piece piece = pieceItem.getValue();
+
+            List<Position> possibleMovesList = piece.possibleMoves(position, pieceMap, gameState.getCurrentPlayer());
+
+            possibleMoveMap.put(position, possibleMovesList);
+
+        }
+
+
+        return possibleMoveMap;
+    }
+
+    private void movePieceOperation(String input) {
+        String[] moveCommandItems = input.split("\\s+");
+
+        if (moveCommandItems.length != 3) {
+            writeOutput("Not allowed move command");
+            return;
+        }
+
+        Position positionFrom = new Position(moveCommandItems[1]);
+        Position positionTo = new Position(moveCommandItems[2]);
+
+        Map<Position, List<Position>> possibleMoves = getPossibleMoves();
+
+        List<Position> positions = possibleMoves.get(positionFrom);
+
+        if (positions != null && positions.contains(positionTo)) {
+            //Perform move operation
+            gameState.movePiece(positionFrom, positionTo);
+
+            //Switch current user
+            if (Player.White == gameState.getCurrentPlayer()) {
+                gameState.setCurrentPlayer(Player.Black);
+            } else {
+                gameState.setCurrentPlayer(Player.White);
+            }
+
+            //CheckMate
+            if (checkMate()) {
+                writeOutput("The game is over. Congrats to " + gameState.getCurrentPlayer());
+                System.exit(0);
+            }
+
+        } else {
+            writeOutput("Not allowed move command");
+        }
+    }
+
+    public boolean checkMate() {
+        //TODO: Implement Checkmate functionality
+        return false;
     }
 
     private void showBoard() {
