@@ -34,6 +34,14 @@ public class GameState {
     }
 
     /**
+     * Set current player
+     * @param currentPlayer The new current player
+     */
+    public void setCurrentPlayer(Player currentPlayer) {
+        this.currentPlayer = currentPlayer;
+    }
+
+    /**
      * Call to initialize the game state into the starting positions
      */
     public void reset() {
@@ -76,6 +84,7 @@ public class GameState {
 
     /**
      * Get the piece at the position specified by the String
+     *
      * @param colrow The string indication of position; i.e. "d5"
      * @return The piece at that position, or null if it does not exist.
      */
@@ -86,6 +95,7 @@ public class GameState {
 
     /**
      * Get the piece at a given position on the board
+     *
      * @param position The position to inquire about.
      * @return The piece at that position, or null if it does not exist.
      */
@@ -95,10 +105,51 @@ public class GameState {
 
     /**
      * Method to place a piece at a given position
-     * @param piece The piece to place
+     *
+     * @param piece    The piece to place
      * @param position The position
      */
     private void placePiece(Piece piece, Position position) {
         positionToPieceMap.put(position, piece);
+    }
+
+    /**
+     * Method to remove a piece at a given position
+     *
+     * @param position The position
+     */
+    private void removePiece(Position position) {
+        positionToPieceMap.remove(position);
+    }
+
+    /**
+     * Method to move a piece at a given position
+     *
+     * @param positionFrom The from position
+     * @param positionTo   The to position
+     */
+    public void movePiece(Position positionFrom, Position positionTo) {
+        Piece piece = positionToPieceMap.get(positionFrom);
+        positionToPieceMap.remove(positionFrom);
+        placePiece(piece, positionTo);
+    }
+
+
+    /**
+     * Get piece and their position by provided player
+     *
+     * @param player Provided player
+     * @return Map of pieces their positions
+     */
+    public Map<Position, Piece> getPieceMap(Player player) {
+        Map<Position, Piece> pieceMap = new HashMap<>();
+
+        for (Map.Entry<Position, Piece> item : positionToPieceMap.entrySet()) {
+            Piece piece = item.getValue();
+            if (player.equals(piece.getOwner())) {
+                pieceMap.put(item.getKey(), item.getValue());
+            }
+        }
+        return pieceMap;
     }
 }
